@@ -190,6 +190,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DWIN64 -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DNDEBUG "-I." "-I.\..\..\..\..\Qt\Qt5.7.0\5.7\msvc2015_64\include" "-I.\..\..\..\..\Qt\Qt5.7.0\5.7\msvc2015_64\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.7.0\5.7\msvc2015_64\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.7.0\5.7\msvc2015_64\include\QtANGLE" "-I.\..\..\..\..\Qt\Qt5.7.0\5.7\msvc2015_64\include\QtCore" "-I.\release" "-I.\..\..\..\..\Qt\Qt5.7.0\5.7\msvc2015_64\mkspecs\win32-msvc2015" "-I.\GeneratedFiles"</Command>
     </CustomBuild>
+    <ClInclude Include="ExperimentController.h" />
     <ClInclude Include="GeneratedFiles\ui_mainwindow.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
