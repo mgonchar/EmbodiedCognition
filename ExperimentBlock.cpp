@@ -4,7 +4,7 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	QString subject_id,
 	unsigned int wait_before_circle_moving_time,
 	HandKind hand_to_test)
-	: QWidget(parent)
+	: controller(parent)//QWidget(parent)
 	, logging_file(QDir::currentPath() + "/subjects/" + subject_id + QDate::currentDate().toString("dd.MM.yyyy") + ".log")
 	, logging_stream(&logging_file)
 	, wait_before_circle_moving_time(wait_before_circle_moving_time)
@@ -30,6 +30,8 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	//painter->scale(side / 200.0, side / 200.0);
 	//painter->setRenderHint(QPainter::Antialiasing);
 	//painter->setRenderHint(QPainter::TextAntialiasing);
+
+	bool ok = connect(this, SIGNAL(GetNextWord()), controller, SLOT(NextTrial()));
 
 	QDir().mkpath(logging_file.fileName().remove(subject_id + QDate::currentDate().toString("dd.MM.yyyy") + ".log"));
 	logging_file.open(QIODevice::ReadWrite);	
@@ -120,7 +122,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 		logging_stream << ("Displaying text: " + text_to_show + "of category: " + GetCategoryString() +"\n");
 
 		elapsed_timer.start();
-		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, "Nastichka Zayka :*");
+		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, text_to_show);
 	}
 
 	if (current_state & ShowingPerifiricCircle)
@@ -242,5 +244,6 @@ void ExperimentBlock::ChangeToPerifiric()
 void ExperimentBlock::FinishTheBlock()
 { 
 	SetBlockState(FinishBlock);
+	GetNextWord();
 	update(); 
 }

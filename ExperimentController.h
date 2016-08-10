@@ -4,15 +4,20 @@
 
 #include <QWidget>
 
-class ExpirementController
+class ExpirementController: public QWidget
 {
+	Q_OBJECT
+
 public:
-	ExpirementController() 
-	{
-		formed_for_experiment.reserve(3*8*10);
-	}
+	explicit ExpirementController();
+
+	void EvaluateExperiment();
+
+	ExperimentBlock experiment_block;
 
 	QStringList formed_for_experiment;
+
+	int show_idx = 0;
 
 	QStringList hand_words = { 
 		"бросать",
@@ -38,7 +43,7 @@ public:
 		"топтать",
 		"шаркать"
 	};
-	QStringList common = { 
+	QStringList common_words = { 
 		"обладать",
 		"усилить",
 		"выучить",
@@ -50,4 +55,7 @@ public:
 		"обещать",
 		"возмутить"
 	};
+
+public slots:
+	void NextTrial();
 };

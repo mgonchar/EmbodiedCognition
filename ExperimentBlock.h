@@ -95,10 +95,15 @@ public:
 	QTextStream logging_stream;
 	QTime elapsed_timer;
 
+	QWidget* controller;
+
 private slots:
 	void AddText();
 	void ChangeToPerifiric();
 	void FinishTheBlock();
+
+signals:
+	void GetNextWord();
 
 private:
 	unsigned int interstimulus_time;
