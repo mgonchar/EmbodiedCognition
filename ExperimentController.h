@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ExperimentBlock.h"
+#include <QTextCodec>
 
 #include <QWidget>
 
@@ -43,7 +44,7 @@ public:
 		"топтать",
 		"шаркать"
 	};
-	QStringList common_words = { 
+	QStringList common_words = {
 		"обладать",
 		"усилить",
 		"выучить",

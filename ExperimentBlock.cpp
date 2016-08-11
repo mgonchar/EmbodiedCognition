@@ -31,10 +31,12 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	//painter->setRenderHint(QPainter::Antialiasing);
 	//painter->setRenderHint(QPainter::TextAntialiasing);
 
-	bool ok = connect(this, SIGNAL(GetNextWord()), controller, SLOT(NextTrial()));
+	connect(this, SIGNAL(GetNextWord()), controller, SLOT(NextTrial()));
 
 	QDir().mkpath(logging_file.fileName().remove(subject_id + QDate::currentDate().toString("dd.MM.yyyy") + ".log"));
-	logging_file.open(QIODevice::ReadWrite);	
+	logging_file.open(QIODevice::ReadWrite | QIODevice::Truncate);
+
+	logging_stream.setCodec("UTF-16");
 
 	logging_stream << ("Experiment started: " + QDate::currentDate().toString("dd.MM.yyyy") + "\nSubject id: "+ subject_id + "\n\n");
 
@@ -42,7 +44,7 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 
 	logging_stream << ("Active hand: " + static_cast<QString>(GetHandKind()==LEFT ? "LEFT" : "RIGHT") + "\n\n");
 
-	text_bounds_rect = QRect(-width()/2, -100, width(), 50);
+	text_bounds_rect = QRect(-width()/2, -height()/2, width(), height() / 2 - 50);
 	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? width()/2 - 100 : 0, -50, 100, 100);
 
 	hold_center_timer.setTimerType(Qt::PreciseTimer);
@@ -119,7 +121,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 		painter.setPen(pen);
 		painter.setFont(QFont("Arial", 50));
 
-		logging_stream << ("Displaying text: " + text_to_show + "of category: " + GetCategoryString() +"\n");
+		logging_stream << ("Displaying text: " + text_to_show + " of category: " + GetCategoryString() +"\n");
 
 		elapsed_timer.start();
 		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, text_to_show);
