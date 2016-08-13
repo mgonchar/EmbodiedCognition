@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QMouseEvent>
 #include <QTextStream>
+#include <QTextCodec>
 #include <QFile>
 #include <QDir>
 #include <QDate>
@@ -25,7 +26,8 @@ typedef enum
 	ShowingCentralCircle   = 2,
 	ShowingText			   = 4,
 	ShowingPerifiricCircle = 8,
-	FinishBlock            = 16
+	DisplayTextMessage	   = 16,
+	FinishExperiment       = 32
 } BlockState;
 
 typedef enum
@@ -69,13 +71,15 @@ public:
 	void SetHandKind(HandKind hand) 
 	{ 
 		hand_to_test = hand; 
-		logging_stream << ("Active hand: " + static_cast<QString>(GetHandKind() == LEFT ? "LEFT" : "RIGHT") + "\n\n");
+		logging_stream << ("\nActive hand: " + static_cast<QString>(GetHandKind() == LEFT ? "LEFT" : "RIGHT") + "\n\n");
+
+		perifiric_circle_bounds_rect = QRect((hand_to_test&RIGHT) ? width() / 2 - 100 : -width() / 2, -50, 100, 100);
 	}
 
 	void SetInterval(unsigned int interval)
 	{
 		wait_before_circle_moving_time = interval;
-		logging_stream << ("Interval before circle change: " + QString("%1").arg(wait_before_circle_moving_time) + "\n\n");
+		logging_stream << ("\nInterval before circle change: " + QString("%1").arg(wait_before_circle_moving_time) + "\n\n");
 	}
 
 	unsigned int GetBlockState() { return current_state; }
@@ -87,6 +91,7 @@ public:
 	void paintEvent(QPaintEvent *);
 	void mousePressEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
+	void keyPressEvent(QKeyEvent *event);
 
 	void StopAllTimers();
 	void FailedTrial();
@@ -104,6 +109,7 @@ private slots:
 
 signals:
 	void GetNextWord();
+	void CloseAll();
 
 private:
 	unsigned int interstimulus_time;

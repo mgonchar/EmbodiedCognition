@@ -40,9 +40,9 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 
 	logging_stream << ("Experiment started: " + QDate::currentDate().toString("dd.MM.yyyy") + "\nSubject id: "+ subject_id + "\n\n");
 
-	logging_stream << ("Interval before circle change: " + QString("%1").arg(wait_before_circle_moving_time) + "\n\n");
+	//logging_stream << ("Interval before circle change: " + QString("%1").arg(wait_before_circle_moving_time) + "\n\n");
 
-	logging_stream << ("Active hand: " + static_cast<QString>(GetHandKind()==LEFT ? "LEFT" : "RIGHT") + "\n\n");
+	//logging_stream << ("Active hand: " + static_cast<QString>(GetHandKind()==LEFT ? "LEFT" : "RIGHT") + "\n\n");
 
 	text_bounds_rect = QRect(-width()/2, -height()/2, width(), height() / 2 - 50);
 	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? width()/2 - 100 : 0, -50, 100, 100);
@@ -135,12 +135,22 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 		painter.drawEllipse(GetPerifiricCircleBounds());
 	}
 
-	if (current_state & FinishBlock)
+	if (current_state & DisplayTextMessage)
 	{
+		QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
 		painter.setPen(pen);
 		painter.setFont(QFont("Arial", 50));
 
-		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, "Block finished succesfully!");
+		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, codec->toUnicode("Серия окончена\nСмена условий эксперимента"));
+	}
+
+	if (current_state & FinishExperiment)
+	{
+		QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
+		painter.setPen(pen);
+		painter.setFont(QFont("Arial", 50));
+
+		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, codec->toUnicode("Эксперимент окончен!"));
 	}
 
 }
@@ -150,6 +160,14 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 	QPoint pos = event->pos() - QPoint(width() / 2, height() / 2);
 
 	unsigned int current_state = GetBlockState();
+
+	switch (current_state)
+	{
+	case DisplayTextMessage:
+	case FinishExperiment:
+		return;
+		break;
+	}
 
 	switch (current_state & CircleOnScreen)
 	{
@@ -181,11 +199,13 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 				FailedTrial();
 			}
 			break;
+
 		default:
 			StopAllTimers();
 			FailedTrial();
 			break;
 	}
+
 }
 
 void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
@@ -209,6 +229,18 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 	holding_center = holding_perifiric = false;
 }
 
+void ExperimentBlock::keyPressEvent(QKeyEvent * /*event*/)
+{
+	switch (GetBlockState()) {
+	case FinishExperiment:
+		CloseAll();
+		break;
+	case DisplayTextMessage:
+		GetNextWord();
+		break;
+	}
+}
+
 void ExperimentBlock::StopAllTimers()
 {
 	if (hold_center_timer.isActive())
@@ -224,9 +256,9 @@ void ExperimentBlock::StopAllTimers()
 
 void ExperimentBlock::FailedTrial()
 {
-	logging_stream << "Trial failed in reason of accasuonal or incorrect screen touching\n";
+	logging_stream << "Trial failed in reason of occasional or incorrect screen touching\n";
 	logging_stream.flush();
-	exit(-1);
+	GetNextWord();
 }
 
 
@@ -245,7 +277,6 @@ void ExperimentBlock::ChangeToPerifiric()
 
 void ExperimentBlock::FinishTheBlock()
 { 
-	SetBlockState(FinishBlock);
 	GetNextWord();
 	update(); 
 }

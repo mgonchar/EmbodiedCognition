@@ -1,61 +1,47 @@
 #pragma once
 
 #include "ExperimentBlock.h"
-#include <QTextCodec>
 
+#include <QApplication>
 #include <QWidget>
+
+struct CategorialWord
+{
+	CategorialWord(QString wrd, WordCategory categ){
+		word = wrd;
+		category = categ;
+	};
+
+	QString word;
+	WordCategory category;
+};
 
 class ExpirementController: public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit ExpirementController();
+	explicit ExpirementController(QApplication* a);
 
 	void EvaluateExperiment();
 
+	void FormExperimentSet();
+
 	ExperimentBlock experiment_block;
 
-	QStringList formed_for_experiment;
+	QList<CategorialWord> formed_for_experiment;
 
 	int show_idx = 0;
 
-	QStringList hand_words = { 
-		"бросать",
-		"вязать",
-		"держать",
-		"кидать",
-		"красить",
-		"рубить",
-		"хватать",
-		"резать",
-		"ощупывать",
-		"касаться" 
-	};
-	QStringList leg_words = { 
-		"бежать",
-		"вставать",
-		"пинать",
-		"приседать",
-		"прыгать",
-		"топать",
-		"ходить",
-		"шагать",
-		"топтать",
-		"шаркать"
-	};
-	QStringList common_words = {
-		"обладать",
-		"усилить",
-		"выучить",
-		"увлечь",
-		"уделить",
-		"верить",
-		"развить",
-		"желать",
-		"обещать",
-		"возмутить"
-	};
+	QList<CategorialWord> hand_words;
+	QList<CategorialWord> leg_words;
+	QList<CategorialWord> common_words;
+
+	HandKind hk_design[2] = { LEFT, RIGHT };
+	unsigned int mvngtm_design[2] = { 53, 332 };
+
+	int hk_idx = 0;
+	int mvngtm_idx = 0;
 
 public slots:
 	void NextTrial();
