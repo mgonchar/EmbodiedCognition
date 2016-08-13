@@ -61,7 +61,7 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 
 	setAutoFillBackground(true);
 	setStyleSheet("background-color: black");
-	//setWindowState(Qt::WindowFullScreen); // uncomment to get fullscreen mode
+	setWindowState(Qt::WindowFullScreen); // uncomment to get fullscreen mode
 }
 
 ExperimentBlock::~ExperimentBlock() 
@@ -229,8 +229,15 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 	holding_center = holding_perifiric = false;
 }
 
-void ExperimentBlock::keyPressEvent(QKeyEvent * /*event*/)
+void ExperimentBlock::keyPressEvent(QKeyEvent *event)
 {
+	switch (event->key())
+	{
+	case Qt::Key::Key_Escape:
+		CloseAll();
+		break;
+	}
+
 	switch (GetBlockState()) {
 	case FinishExperiment:
 		CloseAll();
