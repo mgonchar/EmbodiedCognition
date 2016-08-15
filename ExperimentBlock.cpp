@@ -5,7 +5,7 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	unsigned int wait_before_circle_moving_time,
 	HandKind hand_to_test)
 	: controller(parent)//QWidget(parent)
-	, logging_file(QDir::currentPath() + "/subjects/" + subject_id + QDate::currentDate().toString("dd.MM.yyyy") + ".log")
+	, logging_file(QDir::currentPath() + "/subjects/" + subject_id +"_"+ QDate::currentDate().toString("dd.MM.yyyy") + ".log")
 	, logging_stream(&logging_file)
 	, wait_before_circle_moving_time(wait_before_circle_moving_time)
 	, hand_to_test(hand_to_test)

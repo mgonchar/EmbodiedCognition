@@ -2,8 +2,8 @@
 
 #include <time.h>
 
-ExpirementController::ExpirementController(QApplication* a)
-	: experiment_block(this)
+ExpirementController::ExpirementController(QApplication* a, QString id)
+	: experiment_block(this, id)
 {
 	//formed_for_experiment.reserve(3*8*10);
 

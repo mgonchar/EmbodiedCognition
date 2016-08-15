@@ -21,7 +21,7 @@ class ExpirementController: public QWidget
 	Q_OBJECT
 
 public:
-	explicit ExpirementController(QApplication* a);
+	explicit ExpirementController(QApplication* a, QString id = "");
 
 	void EvaluateExperiment();
 

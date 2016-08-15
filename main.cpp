@@ -16,7 +16,9 @@ int main(int argc, char *argv[])
 	
 	//ExperimentBlock block;
 	//block.show();
-	ExpirementController controller(&a);
+
+	QString id = argc > 1 ? argv[1] : "";
+	ExpirementController controller(&a, id);
 
 	controller.EvaluateExperiment();
 
