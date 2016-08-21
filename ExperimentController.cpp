@@ -56,10 +56,12 @@ ExpirementController::ExpirementController(QApplication* a, QString id)
 	}
 	experiment_block.SetHandKind(hk_design[0]);
 
+	/*
 	if ((static_cast<double>(qrand())) / RAND_MAX > 0.5) {
 		std::swap(mvngtm_design[0], mvngtm_design[1]);
 	}
 	experiment_block.SetInterval(mvngtm_design[0]);
+	*/
 }
 
 void ExpirementController::FormExperimentSet()
@@ -89,18 +91,19 @@ void ExpirementController::FormExperimentSet()
 
 
 	/*
+	formed_for_experiment.clear();
 	QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
 	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("обладать"), Common));
-	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("усилить"), Common));
-	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("выучить"), Common));
+	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("усилить"), Hand));
+	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("выучить"), Leg));
 	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("увлечь"), Common));
 	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("уделить"), Common));
 	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("верить"), Common));
 	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("развить"), Common));
 	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("желать"), Common));
 	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("обещать"), Common));
-	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("возмутить"), Common));*/
-
+	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("возмутить"), Common));
+	*/
 	show_idx = 0;
 }
 
@@ -122,12 +125,13 @@ void ExpirementController::NextTrial()
 	}
 	else 
 	{
-		if (hk_idx == 1 && mvngtm_idx == 1) {
+		if (hk_idx == 1 /*&& mvngtm_idx == 1*/) {
 			experiment_block.SetBlockState(FinishExperiment);
 			return;
 		}
 		else
 		{
+			/*
 			if (hk_idx == 0 && mvngtm_idx == 0)
 			{
 				experiment_block.SetInterval(mvngtm_design[++mvngtm_idx]);
@@ -140,7 +144,9 @@ void ExpirementController::NextTrial()
 			else if (hk_idx == 1 && mvngtm_idx == 0)
 			{
 				experiment_block.SetInterval(mvngtm_design[++mvngtm_idx]);
-			}
+			}*/
+
+			experiment_block.SetHandKind(hk_design[++hk_idx]);
 		}
 		FormExperimentSet();
 		experiment_block.SetBlockState(DisplayTextMessage);

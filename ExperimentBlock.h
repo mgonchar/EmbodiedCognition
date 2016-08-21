@@ -13,6 +13,9 @@
 #include <QDir>
 #include <QDate>
 #include <QTime>
+#include <QMediaPlayer> 
+#include <QMediaPlaylist>
+#include <QMediaContent>
 
 typedef enum
 {
@@ -46,12 +49,14 @@ class ExperimentBlock : public QWidget
 public:
 	explicit ExperimentBlock(QWidget* parent = nullptr,
 								QString subject_id = "",
-								unsigned int wait_before_circle_moving_time = 53, 
+								unsigned int wait_before_circle_moving_time = 332, 
 								HandKind hand_to_test = RIGHT);
 	~ExperimentBlock();
 
 	const QString & GetText() { return text_to_show; }
-	void SetText(const QString& text, WordCategory category) { text_to_show = text; word_category = category; };
+	void SetText(const QString& text, WordCategory category) { text_to_show = text; word_category = category; }
+	
+	WordCategory GetCategory() { return word_category; }
 	QString GetCategoryString()
 	{
 		switch (word_category)
@@ -73,13 +78,19 @@ public:
 		hand_to_test = hand; 
 		logging_stream << ("\nActive hand: " + static_cast<QString>(GetHandKind() == LEFT ? "LEFT" : "RIGHT") + "\n\n");
 
-		perifiric_circle_bounds_rect = QRect((hand_to_test&RIGHT) ? width() / 2 - 100 : -width() / 2, -50, 100, 100);
+		perifiric_circle_bounds_rect = QRect((hand_to_test&RIGHT) ? 365 : width() / 2 - 420, -55, 110, 110);
+
+		QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
+		condition_change = codec->toUnicode("Серия окончена\nНовая серия будет рисовать круг ") + codec->toUnicode(GetHandKind() == LEFT ? "слева" : "справа");
 	}
 
 	void SetInterval(unsigned int interval)
 	{
 		wait_before_circle_moving_time = interval;
 		logging_stream << ("\nInterval before circle change: " + QString("%1").arg(wait_before_circle_moving_time) + "\n\n");
+
+		QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
+		condition_change = codec->toUnicode("Серия окончена\nНовая серия будет выводить текст с другим интервалом");
 	}
 
 	unsigned int GetBlockState() { return current_state; }
@@ -102,6 +113,11 @@ public:
 
 	QWidget* controller;
 
+	QString condition_change;
+
+	QMediaPlayer player;
+	QMediaPlaylist playlist;
+
 private slots:
 	void AddText();
 	void ChangeToPerifiric();
@@ -112,9 +128,9 @@ signals:
 	void CloseAll();
 
 private:
-	unsigned int interstimulus_time;
-	unsigned int center_helding_time;
-	unsigned int perifiric_helding_time;
+	//unsigned int interstimulus_time;
+	//unsigned int center_helding_time;
+	//unsigned int perifiric_helding_time;
 	unsigned int wait_before_circle_moving_time;
 	HandKind     hand_to_test;
 	unsigned int current_state;
@@ -126,6 +142,7 @@ private:
 	QTimer       hold_center_timer;
 	QTimer       draw_perifiric_timer;
 	QTimer 		 hold_perifiric_timer; 
+	QTimer		 wait_during_common_word;
 	int          cross_half_size;
 
 	bool holding_center;

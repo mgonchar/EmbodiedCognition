@@ -1,5 +1,7 @@
 #include "ExperimentBlock.h"
 
+#include <QSound>
+
 ExperimentBlock::ExperimentBlock(QWidget * parent,
 	QString subject_id,
 	unsigned int wait_before_circle_moving_time,
@@ -9,11 +11,11 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	, logging_stream(&logging_file)
 	, wait_before_circle_moving_time(wait_before_circle_moving_time)
 	, hand_to_test(hand_to_test)
-	, interstimulus_time(500)
-	, center_helding_time(400)	  // use random here ?
-	, perifiric_helding_time(400) // use random here ?
+	//, interstimulus_time(500)
+	//, center_helding_time(400)	  // use random here ?
+	//, perifiric_helding_time(400) // use random here ?
 	, current_state(ShowingCentralCircle)
-	, circle_bounds_rect(-50, -50, 100, 100)
+	, circle_bounds_rect(-55, -55, 110, 110)
 	//, text_bounds_rect(-50,-100,100,50)
 	, cross_half_size(10)
 	, holding_center(false)
@@ -35,17 +37,11 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 
 	QDir().mkpath(logging_file.fileName().remove(subject_id + QDate::currentDate().toString("dd.MM.yyyy") + ".log"));
 	logging_file.open(QIODevice::ReadWrite | QIODevice::Truncate);
-
 	logging_stream.setCodec("UTF-16");
-
 	logging_stream << ("Experiment started: " + QDate::currentDate().toString("dd.MM.yyyy") + "\nSubject id: "+ subject_id + "\n\n");
 
-	//logging_stream << ("Interval before circle change: " + QString("%1").arg(wait_before_circle_moving_time) + "\n\n");
-
-	//logging_stream << ("Active hand: " + static_cast<QString>(GetHandKind()==LEFT ? "LEFT" : "RIGHT") + "\n\n");
-
 	text_bounds_rect = QRect(-width()/2, -height()/2, width(), height() / 2 - 50);
-	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? width()/2 - 100 : 0, -50, 100, 100);
+	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? 365 : width()/2 - 420, -55, 110, 110);
 
 	hold_center_timer.setTimerType(Qt::PreciseTimer);
 	connect(&hold_center_timer, SIGNAL(timeout()), this, SLOT(AddText()));
@@ -59,13 +55,30 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	connect(&hold_perifiric_timer, SIGNAL(timeout()), this, SLOT(FinishTheBlock()));
 	hold_perifiric_timer.setSingleShot(true);
 
+	wait_during_common_word.setTimerType(Qt::PreciseTimer);
+	connect(&wait_during_common_word, SIGNAL(timeout()), this, SLOT(FinishTheBlock()));
+	wait_during_common_word.setSingleShot(true);
+
 	setAutoFillBackground(true);
 	setStyleSheet("background-color: black");
-	setWindowState(Qt::WindowFullScreen); // uncomment to get fullscreen mode
+	setWindowState(Qt::WindowFullScreen);
+
+	playlist.addMedia(QUrl::fromLocalFile(QDir::currentPath() + "/sounds/bad_signal-1.wav"));
+	playlist.addMedia(QUrl::fromLocalFile(QDir::currentPath() + "/sounds/good_signal-4-1.wav"));
+	playlist.setPlaybackMode(QMediaPlaylist::CurrentItemOnce);
+	player.setPlaylist(&playlist);
+	player.setAudioRole(QAudio::AlarmRole);
+	player.setVolume(100);
+
+	player.play();
+
+	logging_stream << "\n\n\nPlayback error: " << player.errorString() << "\n\n\n";
 }
 
 ExperimentBlock::~ExperimentBlock() 
 {
+	StopAllTimers();
+
 	logging_stream << "Experiment finished.";
 	logging_stream.flush(); 
 	logging_file.close(); 
@@ -88,25 +101,6 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 	unsigned int current_state = GetBlockState();
 	
-	/*
-	if (current_state & ShowingInterstimulus)
-	{
-		painter.setPen(pen);
-
-		painter.drawLine(-cross_half_size, 0, cross_half_size, 0);
-		painter.drawLine(0, -cross_half_size, 0, cross_half_size);
-
-		//QTimer *timer = new QTimer(this);
-		//timer->setTimerType(Qt::PreciseTimer);
-		//connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-		//timer->start(1000);
-
-		SetBlockState(ShowingCentralCircle);
-		QTimer::singleShot(interstimulus_time, Qt::PreciseTimer, this, SLOT(update()));
-
-		//painter.setFont(QFont("Arial", 50));
-		//painter.drawText(rect(), Qt::AlignCenter, "Nastichka Zayka :*");
-	}*/
 
 	if (current_state & ShowingCentralCircle)
 	{
@@ -119,11 +113,13 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 	if (current_state & ShowingText)
 	{
 		painter.setPen(pen);
-		painter.setFont(QFont("Arial", 50));
+		painter.setFont(QFont("Arial", 40));
 
 		logging_stream << ("Displaying text: " + text_to_show + " of category: " + GetCategoryString() +"\n");
 
-		elapsed_timer.start();
+		if (GetCategory() != Common)
+			elapsed_timer.start();
+
 		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, text_to_show);
 	}
 
@@ -133,22 +129,30 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 		painter.setBrush(brush);
 
 		painter.drawEllipse(GetPerifiricCircleBounds());
+		
+		if (GetCategory() == Common) 
+		{
+			uint timer_time = ((static_cast<double>(qrand()) / RAND_MAX) * 300 + 500); /* random 500-800 ms */
+			logging_stream << "Started timer to wait during COMMON word: " << QString("%1").arg(timer_time) << " ms\n";
+			logging_stream.flush();
+			wait_during_common_word.start(timer_time);
+		}
 	}
 
 	if (current_state & DisplayTextMessage)
 	{
-		QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
-		painter.setPen(pen);
-		painter.setFont(QFont("Arial", 50));
 
-		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, codec->toUnicode("Серия окончена\nСмена условий эксперимента"));
+		painter.setPen(pen);
+		painter.setFont(QFont("Arial", 40));
+
+		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, condition_change);
 	}
 
 	if (current_state & FinishExperiment)
 	{
 		QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
 		painter.setPen(pen);
-		painter.setFont(QFont("Arial", 50));
+		painter.setFont(QFont("Arial", 40));
 
 		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, codec->toUnicode("Эксперимент окончен!"));
 	}
@@ -175,7 +179,10 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 			if (!(current_state & ShowingText) && GetCircleBounds().contains(pos))
 			{
 				holding_center = true;
-				hold_center_timer.start(center_helding_time);
+				uint timer_time = ((static_cast<double>(qrand()) / RAND_MAX) * 300 + 400); /* random 400-700 ms */
+				logging_stream << "Started timer to wait while central circle is held: " << QString("%1").arg(timer_time) << " ms\n";
+				logging_stream.flush();
+				hold_center_timer.start(timer_time);
 			}
 			else
 			{
@@ -191,7 +198,7 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 				int n_milliseconds = elapsed_timer.elapsed();
 				logging_stream << ("Finger movement taken: " + QString("%1").arg(n_milliseconds) + " ms\n");
 				logging_stream.flush();
-				hold_perifiric_timer.start(perifiric_helding_time);
+				hold_perifiric_timer.start((static_cast<double>(qrand()) / RAND_MAX) * 100 + 300); /* random 300-400 ms */
 			}
 			else
 			{
@@ -210,8 +217,11 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 
 void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 {
-	if (hold_perifiric_timer.isActive() || hold_center_timer.isActive())
-	{
+	if (GetCategory() == Common || hold_perifiric_timer.isActive() || hold_center_timer.isActive())
+	{		
+		if (GetCategory() == Common)
+			logging_stream << "Finger released while word of category COMMON is displayed!!\n";
+
 		StopAllTimers();
 		FailedTrial();
 	} 
@@ -250,6 +260,9 @@ void ExperimentBlock::keyPressEvent(QKeyEvent *event)
 
 void ExperimentBlock::StopAllTimers()
 {
+	if (wait_during_common_word.isActive())
+		wait_during_common_word.stop();
+
 	if (hold_center_timer.isActive())
 		hold_center_timer.stop();
 
@@ -263,6 +276,9 @@ void ExperimentBlock::StopAllTimers()
 
 void ExperimentBlock::FailedTrial()
 {
+	playlist.setCurrentIndex(0);
+	player.play();
+
 	logging_stream << "Trial failed in reason of occasional or incorrect screen touching\n";
 	logging_stream.flush();
 	GetNextWord();
@@ -284,6 +300,9 @@ void ExperimentBlock::ChangeToPerifiric()
 
 void ExperimentBlock::FinishTheBlock()
 { 
+	playlist.setCurrentIndex(1);
+	player.play();
+
 	GetNextWord();
 	update(); 
 }

@@ -11,11 +11,6 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
 	a.setOverrideCursor(Qt::BlankCursor);
-    //MainWindow w;
-    //w.show();
-	
-	//ExperimentBlock block;
-	//block.show();
 
 	QString id = argc > 1 ? argv[1] : "";
 	ExpirementController controller(&a, id);
