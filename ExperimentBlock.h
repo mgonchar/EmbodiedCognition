@@ -37,7 +37,9 @@ typedef enum
 {
 	Hand   = 1,
 	Leg    = 2,
-	Common = 4
+	Common = 4,
+	Red	   = 8,
+	Green  = 16
 } WordCategory;
 
 #define CircleOnScreen (ShowingCentralCircle|ShowingPerifiricCircle)
@@ -49,6 +51,7 @@ class ExperimentBlock : public QWidget
 public:
 	explicit ExperimentBlock(QWidget* parent = nullptr,
 								QString subject_id = "",
+								bool colored_series = false,
 								unsigned int wait_before_circle_moving_time = 332, 
 								HandKind hand_to_test = RIGHT);
 	~ExperimentBlock();
@@ -56,7 +59,7 @@ public:
 	const QString & GetText() { return text_to_show; }
 	void SetText(const QString& text, WordCategory category) { text_to_show = text; word_category = category; }
 	
-	WordCategory GetCategory() { return word_category; }
+	inline WordCategory GetCategory() { return word_category; }
 	QString GetCategoryString()
 	{
 		switch (word_category)
@@ -102,6 +105,7 @@ public:
 	void paintEvent(QPaintEvent *);
 	void mousePressEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
+	void mouseMoveEvent(QMouseEvent * event);
 	void keyPressEvent(QKeyEvent *event);
 
 	void StopAllTimers();
@@ -115,7 +119,7 @@ public:
 
 	QString condition_change;
 
-	QMediaPlayer player;
+	QMediaPlayer* player;
 	QMediaPlaylist playlist;
 
 private slots:
@@ -143,7 +147,8 @@ private:
 	QTimer       draw_perifiric_timer;
 	QTimer 		 hold_perifiric_timer; 
 	QTimer		 wait_during_common_word;
-	int          cross_half_size;
+	//int          cross_half_size;
+	bool         colored;
 
 	bool holding_center;
 	bool holding_perifiric;

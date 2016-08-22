@@ -13,7 +13,8 @@ int main(int argc, char *argv[])
 	a.setOverrideCursor(Qt::BlankCursor);
 
 	QString id = argc > 1 ? argv[1] : "";
-	ExpirementController controller(&a, id);
+	bool colored_series = argc > 2 ? (QString(argv[2]) == "color") : false;
+	ExpirementController controller(&a, id, colored_series);
 
 	controller.EvaluateExperiment();
 

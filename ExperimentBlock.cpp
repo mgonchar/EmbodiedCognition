@@ -4,10 +4,12 @@
 
 ExperimentBlock::ExperimentBlock(QWidget * parent,
 	QString subject_id,
+	bool colored_series,
 	unsigned int wait_before_circle_moving_time,
 	HandKind hand_to_test)
 	: controller(parent)//QWidget(parent)
-	, logging_file(QDir::currentPath() + "/subjects/" + subject_id +"_"+ QDate::currentDate().toString("dd.MM.yyyy") + ".log")
+	, player(new QMediaPlayer(this, QMediaPlayer::LowLatency))
+	, logging_file(QDir::currentPath() + "/subjects/" + subject_id + QString(colored_series ? "_colored_" : "_ordinal_") + QDate::currentDate().toString("dd.MM.yyyy") + ".log")
 	, logging_stream(&logging_file)
 	, wait_before_circle_moving_time(wait_before_circle_moving_time)
 	, hand_to_test(hand_to_test)
@@ -17,7 +19,8 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	, current_state(ShowingCentralCircle)
 	, circle_bounds_rect(-55, -55, 110, 110)
 	//, text_bounds_rect(-50,-100,100,50)
-	, cross_half_size(10)
+	//, cross_half_size(10)
+	, colored(colored_series)
 	, holding_center(false)
 	, holding_perifiric(false)
 	//, hold_center_timer(new QTimer(this))
@@ -35,10 +38,11 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 
 	connect(this, SIGNAL(GetNextWord()), controller, SLOT(NextTrial()));
 
-	QDir().mkpath(logging_file.fileName().remove(subject_id + QDate::currentDate().toString("dd.MM.yyyy") + ".log"));
+	QDir().mkpath(logging_file.fileName().remove(subject_id + QString(colored_series ? "_colored_" : "_ordinal_") + QDate::currentDate().toString("dd.MM.yyyy") + ".log"));
 	logging_file.open(QIODevice::ReadWrite | QIODevice::Truncate);
 	logging_stream.setCodec("UTF-16");
 	logging_stream << ("Experiment started: " + QDate::currentDate().toString("dd.MM.yyyy") + "\nSubject id: "+ subject_id + "\n\n");
+	logging_stream << "Series type: " << (colored_series ? "colored\n\n" : "ordinal\n\n");
 
 	text_bounds_rect = QRect(-width()/2, -height()/2, width(), height() / 2 - 50);
 	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? 365 : width()/2 - 420, -55, 110, 110);
@@ -66,13 +70,9 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	playlist.addMedia(QUrl::fromLocalFile(QDir::currentPath() + "/sounds/bad_signal-1.wav"));
 	playlist.addMedia(QUrl::fromLocalFile(QDir::currentPath() + "/sounds/good_signal-4-1.wav"));
 	playlist.setPlaybackMode(QMediaPlaylist::CurrentItemOnce);
-	player.setPlaylist(&playlist);
-	player.setAudioRole(QAudio::AlarmRole);
-	player.setVolume(100);
-
-	player.play();
-
-	logging_stream << "\n\n\nPlayback error: " << player.errorString() << "\n\n\n";
+	player->setPlaylist(&playlist);
+	player->setAudioRole(QAudio::AlarmRole);
+	player->setVolume(100);
 }
 
 ExperimentBlock::~ExperimentBlock() 
@@ -93,7 +93,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 	QPen pen(Qt::white);
 	pen.setWidth(2);
 
-	QBrush brush(Qt::red);
+	QBrush brush(colored ? QColor(130,128,128) : Qt::red);
 
 	painter.translate(width() / 2, height() / 2);
 	//int side = qMin(width(), height());
@@ -112,12 +112,13 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 	if (current_state & ShowingText)
 	{
+		pen.setColor(colored ? (GetCategory() == Red ? Qt::red : Qt::green) : Qt::white);
 		painter.setPen(pen);
 		painter.setFont(QFont("Arial", 40));
 
 		logging_stream << ("Displaying text: " + text_to_show + " of category: " + GetCategoryString() +"\n");
 
-		if (GetCategory() != Common)
+		if (GetCategory() != Common && GetCategory() != Red)
 			elapsed_timer.start();
 
 		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, text_to_show);
@@ -130,7 +131,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 		painter.drawEllipse(GetPerifiricCircleBounds());
 		
-		if (GetCategory() == Common) 
+		if (GetCategory() == Common || GetCategory() == Red)
 		{
 			uint timer_time = ((static_cast<double>(qrand()) / RAND_MAX) * 300 + 500); /* random 500-800 ms */
 			logging_stream << "Started timer to wait during COMMON word: " << QString("%1").arg(timer_time) << " ms\n";
@@ -217,10 +218,11 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 
 void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 {
-	if (GetCategory() == Common || hold_perifiric_timer.isActive() || hold_center_timer.isActive())
+	bool wrong_decision_common_word = ((GetCategory() == Common || GetCategory() == Red) && holding_center && wait_during_common_word.isActive());
+	if (wrong_decision_common_word || hold_perifiric_timer.isActive() || hold_center_timer.isActive())
 	{		
-		if (GetCategory() == Common)
-			logging_stream << "Finger released while word of category COMMON is displayed!!\n";
+		if (wrong_decision_common_word)
+			logging_stream << "Finger released while word of category" << (colored ? "RED" : "COMMON") << " is displayed!!\n";
 
 		StopAllTimers();
 		FailedTrial();
@@ -237,6 +239,23 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 	}
 
 	holding_center = holding_perifiric = false;
+}
+
+void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
+{
+	QPoint pos = event->pos() - QPoint(width() / 2, height() / 2);
+
+	if (holding_center && !GetCircleBounds().contains(pos)) 
+	{
+		StopAllTimers();
+		FailedTrial();
+	}
+
+	if (holding_perifiric && !GetPerifiricCircleBounds().contains(pos))
+	{
+		StopAllTimers();
+		FailedTrial();
+	}
 }
 
 void ExperimentBlock::keyPressEvent(QKeyEvent *event)
@@ -277,7 +296,7 @@ void ExperimentBlock::StopAllTimers()
 void ExperimentBlock::FailedTrial()
 {
 	playlist.setCurrentIndex(0);
-	player.play();
+	player->play();
 
 	logging_stream << "Trial failed in reason of occasional or incorrect screen touching\n";
 	logging_stream.flush();
@@ -301,7 +320,7 @@ void ExperimentBlock::ChangeToPerifiric()
 void ExperimentBlock::FinishTheBlock()
 { 
 	playlist.setCurrentIndex(1);
-	player.play();
+	player->play();
 
 	GetNextWord();
 	update(); 

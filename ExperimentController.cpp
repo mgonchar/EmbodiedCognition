@@ -2,48 +2,48 @@
 
 #include <time.h>
 
-ExpirementController::ExpirementController(QApplication* a, QString id)
-	: experiment_block(this, id)
+ExpirementController::ExpirementController(QApplication* a, QString id, bool colored_series)
+	: experiment_block(this, id, colored_series)
 {
-	//formed_for_experiment.reserve(3*8*10);
+	formed_for_experiment.reserve(3*8*10);
 
 	QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
 
 	common_words.reserve(10);
-	common_words.push_back(CategorialWord(codec->toUnicode("обладать"), Common));
-	common_words.push_back(CategorialWord(codec->toUnicode("усилить"), Common));
-	common_words.push_back(CategorialWord(codec->toUnicode("выучить"), Common));
-	common_words.push_back(CategorialWord(codec->toUnicode("увлечь"), Common));
-	common_words.push_back(CategorialWord(codec->toUnicode("уделить"), Common));
-	common_words.push_back(CategorialWord(codec->toUnicode("верить"), Common));
-	common_words.push_back(CategorialWord(codec->toUnicode("развить"), Common));
-	common_words.push_back(CategorialWord(codec->toUnicode("желать"), Common));
-	common_words.push_back(CategorialWord(codec->toUnicode("обещать"), Common));
-	common_words.push_back(CategorialWord(codec->toUnicode("возмутить"), Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("обладать"),  colored_series ? Red   : Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("усилить"),   colored_series ? Red   : Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("выучить"),   colored_series ? Red   : Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("увлечь"),    colored_series ? Red   : Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("уделить"),   colored_series ? Red   : Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("верить"),    colored_series ? Green : Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("развить"),   colored_series ? Green : Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("желать"),    colored_series ? Green : Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("обещать"),   colored_series ? Green : Common));
+	common_words.push_back(CategorialWord(codec->toUnicode("возмутить"), colored_series ? Green : Common));
 
 	hand_words.reserve(10);
-	hand_words.push_back(CategorialWord(codec->toUnicode("бросать"), Hand));
-	hand_words.push_back(CategorialWord(codec->toUnicode("вязать"), Hand));
-	hand_words.push_back(CategorialWord(codec->toUnicode("держать"), Hand));
-	hand_words.push_back(CategorialWord(codec->toUnicode("кидать"), Hand));
-	hand_words.push_back(CategorialWord(codec->toUnicode("красить"), Hand));
-	hand_words.push_back(CategorialWord(codec->toUnicode("рубить"), Hand));
-	hand_words.push_back(CategorialWord(codec->toUnicode("хватать"), Hand));
-	hand_words.push_back(CategorialWord(codec->toUnicode("резать"), Hand));
-	hand_words.push_back(CategorialWord(codec->toUnicode("ощупывать"), Hand));
-	hand_words.push_back(CategorialWord(codec->toUnicode("касаться"), Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("бросать"),   colored_series ? Red   : Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("вязать"),    colored_series ? Red   : Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("держать"),   colored_series ? Red   : Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("кидать"),    colored_series ? Red   : Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("красить"),   colored_series ? Red   : Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("рубить"),    colored_series ? Green : Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("хватать"),   colored_series ? Green : Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("резать"),    colored_series ? Green : Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("ощупывать"), colored_series ? Green : Hand));
+	hand_words.push_back(CategorialWord(codec->toUnicode("касаться"),  colored_series ? Green : Hand));
 
 	leg_words.reserve(10);
-	leg_words.push_back(CategorialWord(codec->toUnicode("бежать"), Leg));
-	leg_words.push_back(CategorialWord(codec->toUnicode("вставать"), Leg));
-	leg_words.push_back(CategorialWord(codec->toUnicode("пинать"), Leg));
-	leg_words.push_back(CategorialWord(codec->toUnicode("приседать"), Leg));
-	leg_words.push_back(CategorialWord(codec->toUnicode("прыгать"), Leg));
-	leg_words.push_back(CategorialWord(codec->toUnicode("топать"), Leg));
-	leg_words.push_back(CategorialWord(codec->toUnicode("ходить"), Leg));
-	leg_words.push_back(CategorialWord(codec->toUnicode("шагать"), Leg));
-	leg_words.push_back(CategorialWord(codec->toUnicode("топтать"), Leg));
-	leg_words.push_back(CategorialWord(codec->toUnicode("шаркать"), Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("бежать"),     colored_series ? Red   : Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("вставать"),   colored_series ? Red   : Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("пинать"),     colored_series ? Red   : Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("приседать"),  colored_series ? Red   : Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("прыгать"),    colored_series ? Red   : Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("топать"),     colored_series ? Green : Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("ходить"),     colored_series ? Green : Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("шагать"),     colored_series ? Green : Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("топтать"),    colored_series ? Green : Leg));
+	leg_words.push_back(CategorialWord(codec->toUnicode("шаркать"),    colored_series ? Green : Leg));
 
 	FormExperimentSet();
 
