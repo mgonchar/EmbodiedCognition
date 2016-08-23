@@ -1,10 +1,15 @@
 #include "ExperimentBlock.h"
 
-#include <QSound>
+double angle2px(double angle, double dist, double size_px, bool is_width)
+{
+	return std::tan(angle*pi / 360.0)*2.0*dist*size_px / (is_width ? laptop_screen_width_mm : laptop_screen_height_mm);
+}
 
 ExperimentBlock::ExperimentBlock(QWidget * parent,
 	QString subject_id,
 	bool colored_series,
+	double dist,
+	bool is_hand,
 	unsigned int wait_before_circle_moving_time,
 	HandKind hand_to_test)
 	: controller(parent)//QWidget(parent)
@@ -17,12 +22,15 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	//, center_helding_time(400)	  // use random here ?
 	//, perifiric_helding_time(400) // use random here ?
 	, current_state(ShowingCentralCircle)
-	, circle_bounds_rect(-55, -55, 110, 110)
+	//, circle_bounds_rect(-55, -55, 110, 110)
 	//, text_bounds_rect(-50,-100,100,50)
 	//, cross_half_size(10)
 	, colored(colored_series)
+	, distance_to_display(dist)
+	, is_hand(is_hand)
 	, holding_center(false)
 	, holding_perifiric(false)
+	, font_size(50)
 	//, hold_center_timer(new QTimer(this))
 	//, draw_perifiric_timer(new QTimer(this))
 	//, hold_perifiric_timer(new QTimer(this))
@@ -42,10 +50,21 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	logging_file.open(QIODevice::ReadWrite | QIODevice::Truncate);
 	logging_stream.setCodec("UTF-16");
 	logging_stream << ("Experiment started: " + QDate::currentDate().toString("dd.MM.yyyy") + "\nSubject id: "+ subject_id + "\n\n");
+	logging_stream << "Series type: " << (is_hand? "TESTING_HANDS\n" : "TESTING_LEGS\n");
 	logging_stream << "Series type: " << (colored_series ? "colored\n\n" : "ordinal\n\n");
 
-	text_bounds_rect = QRect(-width()/2, -height()/2, width(), height() / 2 - 50);
-	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? 365 : width()/2 - 420, -55, 110, 110);
+	int wdt = QGuiApplication::primaryScreen()->geometry().width();
+	int circle_size = angle2px(CIRCLE_ANGLE, distance_to_display, wdt, true);
+	int delta = angle2px(SHIFT_ANGLE, distance_to_display, wdt, true);
+
+	QFontMetrics fm = QFontMetrics(QFont("Arial", font_size));
+	int px_w = fm.width("возмутить");
+	double tmp = angle2px(TEXT_ANGLE, distance_to_display, wdt, true);
+	font_size *= tmp/ px_w;
+
+	circle_bounds_rect = QRect(-circle_size/2, -circle_size/2, circle_size, circle_size);
+	text_bounds_rect = QRect(-width()/2, -height()/2, width(), height() / 2 - circle_size / 2);
+	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? delta : width()/2 - delta - circle_size, -circle_size/2, circle_size, circle_size);
 
 	hold_center_timer.setTimerType(Qt::PreciseTimer);
 	connect(&hold_center_timer, SIGNAL(timeout()), this, SLOT(AddText()));
@@ -114,7 +133,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 	{
 		pen.setColor(colored ? (GetCategory() == Red ? Qt::red : Qt::green) : Qt::white);
 		painter.setPen(pen);
-		painter.setFont(QFont("Arial", 40));
+		painter.setFont(QFont("Arial", font_size));
 
 		logging_stream << ("Displaying text: " + text_to_show + " of category: " + GetCategoryString() +"\n");
 
@@ -144,7 +163,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 	{
 
 		painter.setPen(pen);
-		painter.setFont(QFont("Arial", 40));
+		painter.setFont(QFont("Arial", font_size));
 
 		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, condition_change);
 	}
@@ -153,7 +172,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 	{
 		QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
 		painter.setPen(pen);
-		painter.setFont(QFont("Arial", 40));
+		painter.setFont(QFont("Arial", font_size));
 
 		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, codec->toUnicode("Эксперимент окончен!"));
 	}

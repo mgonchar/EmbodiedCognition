@@ -16,6 +16,20 @@
 #include <QMediaPlayer> 
 #include <QMediaPlaylist>
 #include <QMediaContent>
+#include <QScreen>
+#include <QGuiApplication>
+
+#include <cmath>
+const double pi = std::acos(-1);
+
+const double CIRCLE_ANGLE = 3.2;
+const double TEXT_ANGLE   = 5.0;
+const double SHIFT_ANGLE  = 9.0;
+
+const double laptop_screen_width_mm  = 352.0;
+const double laptop_screen_height_mm = 197.0;
+
+double angle2px(double angle, double dist, double size_px, bool is_width);
 
 typedef enum
 {
@@ -52,6 +66,8 @@ public:
 	explicit ExperimentBlock(QWidget* parent = nullptr,
 								QString subject_id = "",
 								bool colored_series = false,
+								double dist = 500,
+								bool is_hand = true,
 								unsigned int wait_before_circle_moving_time = 332, 
 								HandKind hand_to_test = RIGHT);
 	~ExperimentBlock();
@@ -81,7 +97,11 @@ public:
 		hand_to_test = hand; 
 		logging_stream << ("\nActive hand: " + static_cast<QString>(GetHandKind() == LEFT ? "LEFT" : "RIGHT") + "\n\n");
 
-		perifiric_circle_bounds_rect = QRect((hand_to_test&RIGHT) ? 365 : width() / 2 - 420, -55, 110, 110);
+		int wdt = QGuiApplication::primaryScreen()->geometry().width();
+
+		int delta = angle2px(SHIFT_ANGLE, distance_to_display, wdt, true),
+			circle_size = circle_bounds_rect.width();
+		perifiric_circle_bounds_rect = QRect((hand_to_test&RIGHT) ? delta : width() / 2 - delta - circle_size, -circle_size / 2, circle_size, circle_size);
 
 		QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
 		condition_change = codec->toUnicode("Серия окончена\nНовая серия будет рисовать круг ") + codec->toUnicode(GetHandKind() == LEFT ? "слева" : "справа");
@@ -121,6 +141,10 @@ public:
 
 	QMediaPlayer* player;
 	QMediaPlaylist playlist;
+
+	double distance_to_display;
+	bool is_hand;
+	int font_size;
 
 private slots:
 	void AddText();
