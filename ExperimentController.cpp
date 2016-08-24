@@ -2,8 +2,8 @@
 
 #include <time.h>
 
-ExpirementController::ExpirementController(QApplication* a, QString id, bool colored_series)
-	: experiment_block(this, id, colored_series)
+ExpirementController::ExpirementController(QApplication* a, QString id, bool colored_series, double dist, bool is_hand, double circle_angle, double text_angle, double shift_angle)
+	: experiment_block(this, id, colored_series, dist, is_hand, circle_angle, text_angle, shift_angle)
 {
 	formed_for_experiment.reserve(3*8*10);
 

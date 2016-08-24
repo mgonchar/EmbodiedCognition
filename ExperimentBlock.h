@@ -22,9 +22,13 @@
 #include <cmath>
 const double pi = std::acos(-1);
 
-const double CIRCLE_ANGLE = 3.2;
-const double TEXT_ANGLE   = 5.0;
-const double SHIFT_ANGLE  = 9.0;
+const double CIRCLE_ANGLE     = 3.2;
+const double TEXT_ANGLE       = 5.0;
+const double SHIFT_ANGLE      = 9.0;
+
+const double CIRCLE_ANGLE_LEG = 3.2;
+const double TEXT_ANGLE_LEG   = 5.0;
+const double SHIFT_ANGLE_LEG  = 9.0;
 
 const double laptop_screen_width_mm  = 352.0;
 const double laptop_screen_height_mm = 197.0;
@@ -68,6 +72,9 @@ public:
 								bool colored_series = false,
 								double dist = 500,
 								bool is_hand = true,
+								double circle_angle = 3.2, 
+								double text_angle = 5.0, 
+								double shift_angle = 9.0,
 								unsigned int wait_before_circle_moving_time = 332, 
 								HandKind hand_to_test = RIGHT);
 	~ExperimentBlock();

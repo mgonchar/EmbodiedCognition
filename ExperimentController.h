@@ -21,7 +21,8 @@ class ExpirementController: public QWidget
 	Q_OBJECT
 
 public:
-	explicit ExpirementController(QApplication* a, QString id = "", bool colored_series = false);
+	explicit ExpirementController(QApplication* a, QString id = "", bool colored_series = false, double dist = 500.0, bool is_hand = true, 
+		double circle_angle = 3.2, double text_angle = 5.0, double shift_angle = 9.0);
 
 	void EvaluateExperiment();
 

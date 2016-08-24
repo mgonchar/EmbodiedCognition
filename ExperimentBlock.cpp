@@ -10,11 +10,14 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	bool colored_series,
 	double dist,
 	bool is_hand,
+	double circle_angle, 
+	double text_angle, 
+	double shift_angle,
 	unsigned int wait_before_circle_moving_time,
 	HandKind hand_to_test)
 	: controller(parent)//QWidget(parent)
 	, player(new QMediaPlayer(this, QMediaPlayer::LowLatency))
-	, logging_file(QDir::currentPath() + "/subjects/" + subject_id + QString(colored_series ? "_colored_" : "_ordinal_") + QDate::currentDate().toString("dd.MM.yyyy") + ".log")
+	, logging_file(QDir::currentPath() + "/subjects/" + subject_id + QString(colored_series ? "_colored_" : "_ordinal_") + (is_hand ? "hand_" : "leg_") + QDate::currentDate().toString("dd.MM.yyyy") + ".log")
 	, logging_stream(&logging_file)
 	, wait_before_circle_moving_time(wait_before_circle_moving_time)
 	, hand_to_test(hand_to_test)
@@ -36,17 +39,9 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	//, hold_perifiric_timer(new QTimer(this))
 	//, painter(new QPainter(this))
 {
-
-	//painter->setPen(Qt::white);
-	//painter->translate(width() / 2, height() / 2);
-	//int side = qMin(width(), height());
-	//painter->scale(side / 200.0, side / 200.0);
-	//painter->setRenderHint(QPainter::Antialiasing);
-	//painter->setRenderHint(QPainter::TextAntialiasing);
-
 	connect(this, SIGNAL(GetNextWord()), controller, SLOT(NextTrial()));
 
-	QDir().mkpath(logging_file.fileName().remove(subject_id + QString(colored_series ? "_colored_" : "_ordinal_") + QDate::currentDate().toString("dd.MM.yyyy") + ".log"));
+	QDir().mkpath(logging_file.fileName().remove(subject_id + QString(colored_series ? "_colored_" : "_ordinal_") + (is_hand? "hand_" : "leg_") + QDate::currentDate().toString("dd.MM.yyyy") + ".log"));
 	logging_file.open(QIODevice::ReadWrite | QIODevice::Truncate);
 	logging_stream.setCodec("UTF-16");
 	logging_stream << ("Experiment started: " + QDate::currentDate().toString("dd.MM.yyyy") + "\nSubject id: "+ subject_id + "\n\n");
@@ -54,13 +49,14 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	logging_stream << "Series type: " << (colored_series ? "colored\n\n" : "ordinal\n\n");
 
 	int wdt = QGuiApplication::primaryScreen()->geometry().width();
-	int circle_size = angle2px(CIRCLE_ANGLE, distance_to_display, wdt, true);
-	int delta = angle2px(SHIFT_ANGLE, distance_to_display, wdt, true);
+	int circle_size = angle2px(circle_angle, distance_to_display, wdt, true);
+	int delta = angle2px(shift_angle, distance_to_display, wdt, true);
 
+	QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
 	QFontMetrics fm = QFontMetrics(QFont("Arial", font_size));
-	int px_w = fm.width("возмутить");
-	double tmp = angle2px(TEXT_ANGLE, distance_to_display, wdt, true);
-	font_size *= tmp/ px_w;
+	int px_w = fm.width(codec->toUnicode("возмутить"));
+	double tmp = angle2px(text_angle, distance_to_display, wdt, true);
+	font_size *= tmp / px_w;
 
 	circle_bounds_rect = QRect(-circle_size/2, -circle_size/2, circle_size, circle_size);
 	text_bounds_rect = QRect(-width()/2, -height()/2, width(), height() / 2 - circle_size / 2);
@@ -119,7 +115,6 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 	//painter.scale(side / 200.0, side / 200.0);
 
 	unsigned int current_state = GetBlockState();
-	
 
 	if (current_state & ShowingCentralCircle)
 	{
