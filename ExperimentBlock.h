@@ -22,13 +22,14 @@
 #include <cmath>
 const double pi = std::acos(-1);
 
+/*
 const double CIRCLE_ANGLE     = 3.2;
 const double TEXT_ANGLE       = 5.0;
 const double SHIFT_ANGLE      = 9.0;
 
 const double CIRCLE_ANGLE_LEG = 3.2;
 const double TEXT_ANGLE_LEG   = 5.0;
-const double SHIFT_ANGLE_LEG  = 9.0;
+const double SHIFT_ANGLE_LEG  = 9.0; */
 
 const double laptop_screen_width_mm  = 352.0;
 const double laptop_screen_height_mm = 197.0;
@@ -106,7 +107,7 @@ public:
 
 		int wdt = QGuiApplication::primaryScreen()->geometry().width();
 
-		int delta = angle2px(SHIFT_ANGLE, distance_to_display, wdt, true),
+		int delta = angle2px(shift_angle, distance_to_display, wdt, true),
 			circle_size = circle_bounds_rect.width();
 		perifiric_circle_bounds_rect = QRect((hand_to_test&RIGHT) ? delta : width() / 2 - delta - circle_size, -circle_size / 2, circle_size, circle_size);
 
@@ -150,8 +151,11 @@ public:
 	QMediaPlaylist playlist;
 
 	double distance_to_display;
-	bool is_hand;
-	int font_size;
+	bool   is_hand;
+	int    font_size;
+	double circle_angle;
+	double text_angle;
+	double shift_angle;
 
 private slots:
 	void AddText();
