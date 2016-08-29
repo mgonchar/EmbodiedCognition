@@ -52,14 +52,14 @@ typedef enum
 	FinishExperiment       = 32
 } BlockState;
 
-typedef enum
+enum
 {
 	Hand   = 1,
 	Leg    = 2,
 	Common = 4,
 	Red	   = 8,
 	Green  = 16
-} WordCategory;
+};
 
 #define CircleOnScreen (ShowingCentralCircle|ShowingPerifiricCircle)
 
@@ -81,22 +81,45 @@ public:
 	~ExperimentBlock();
 
 	const QString & GetText() { return text_to_show; }
-	void SetText(const QString& text, WordCategory category) { text_to_show = text; word_category = category; }
+	void SetText(const QString& text, uint category) { text_to_show = text; word_category = category; }
 	
-	inline WordCategory GetCategory() { return word_category; }
+	inline uint GetCategory() { return word_category; }
 	QString GetCategoryString()
 	{
-		switch (word_category)
+		bool complicate = word_category > 7;
+		QString tmp = complicate ? "(" : "";
+
+		switch (word_category&7)
 		{
 		case Hand:
-			return QString("HAND");
+			tmp +="HAND";
+			break;
 		case Leg:
-			return QString("LEG");
+			tmp += "LEG";
+			break;
 		case Common:
-			return QString("COMMON");
+			tmp += "COMMON";
+			break;
 		default:
 			return QString("Error!!!");
 		}
+
+		if (complicate)
+		{
+			switch (word_category >> 3)
+			{
+			case Red:
+				tmp += " RED)";
+				break;
+			case Green:
+				tmp += " GREEN)";
+				break;
+			default:
+				return QString("Error!!!");
+			}
+		}
+
+		return tmp;
 	}
 
 	HandKind GetHandKind() { return hand_to_test; }
@@ -163,7 +186,7 @@ private slots:
 	void FinishTheBlock();
 
 signals:
-	void GetNextWord();
+	void GetNextWord(bool);
 	void CloseAll();
 
 private:
@@ -174,7 +197,7 @@ private:
 	HandKind     hand_to_test;
 	unsigned int current_state;
 	QString		 text_to_show;
-	WordCategory word_category;
+	unsigned int word_category;
 	QRect        circle_bounds_rect;
 	QRect        text_bounds_rect;
 	QRect        perifiric_circle_bounds_rect;

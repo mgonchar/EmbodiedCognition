@@ -42,7 +42,7 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	//, hold_perifiric_timer(new QTimer(this))
 	//, painter(new QPainter(this))
 {
-	connect(this, SIGNAL(GetNextWord()), controller, SLOT(NextTrial()));
+	connect(this, SIGNAL(GetNextWord(bool)), controller, SLOT(NextTrial(bool)));
 
 	QDir().mkpath(logging_file.fileName().remove(subject_id + QString(colored_series ? "_colored_" : "_ordinal_") + (is_hand? "hand_" : "leg_") + QDate::currentDate().toString("dd.MM.yyyy") + ".log"));
 	logging_file.open(QIODevice::ReadWrite | QIODevice::Truncate);
@@ -148,10 +148,11 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 		painter.drawEllipse(GetPerifiricCircleBounds());
 		
-		if (GetCategory() == Common || GetCategory() == Red)
+		uint category = GetCategory();
+		if ((category & Common) || (category & Red))
 		{
 			uint timer_time = ((static_cast<double>(qrand()) / RAND_MAX) * 300 + 500); /* random 500-800 ms */
-			logging_stream << "Started timer to wait during COMMON word: " << QString("%1").arg(timer_time) << " ms\n";
+			logging_stream << "Started timer to wait during" << GetCategoryString() << "word: " << QString("%1").arg(timer_time) << " ms\n";
 			logging_stream.flush();
 			wait_during_common_word.start(timer_time);
 		}
@@ -161,7 +162,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 	{
 
 		painter.setPen(pen);
-		painter.setFont(QFont("Arial", font_size));
+		painter.setFont(QFont("Arial", 40));
 
 		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, condition_change);
 	}
@@ -289,7 +290,7 @@ void ExperimentBlock::keyPressEvent(QKeyEvent *event)
 		CloseAll();
 		break;
 	case DisplayTextMessage:
-		GetNextWord();
+		GetNextWord(false);
 		break;
 	}
 }
@@ -317,7 +318,7 @@ void ExperimentBlock::FailedTrial()
 
 	logging_stream << "Trial failed in reason of occasional or incorrect screen touching\n";
 	logging_stream.flush();
-	GetNextWord();
+	GetNextWord(true);
 }
 
 
@@ -339,6 +340,6 @@ void ExperimentBlock::FinishTheBlock()
 	playlist.setCurrentIndex(1);
 	player->play();
 
-	GetNextWord();
+	GetNextWord(false);
 	update(); 
 }

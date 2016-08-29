@@ -7,13 +7,13 @@
 
 struct CategorialWord
 {
-	CategorialWord(QString wrd, WordCategory categ){
+	CategorialWord(QString wrd, uint categ){
 		word = wrd;
 		category = categ;
 	};
 
 	QString word;
-	WordCategory category;
+	uint    category;
 };
 
 class ExpirementController: public QWidget
@@ -44,6 +44,8 @@ public:
 	int hk_idx = 0;
 	int mvngtm_idx = 0;
 
+	bool is_colored = false;
+
 public slots:
-	void NextTrial();
+	void NextTrial(bool);
 };
