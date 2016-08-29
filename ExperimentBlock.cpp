@@ -63,7 +63,7 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 
 	circle_bounds_rect = QRect(-circle_size/2, -circle_size/2, circle_size, circle_size);
 	text_bounds_rect = QRect(-width()/2, -height()/2, width(), height() / 2 - circle_size / 2);
-	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? delta : width()/2 - delta - circle_size, -circle_size/2, circle_size, circle_size);
+	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? delta : -(delta + circle_size), -circle_size/2, circle_size, circle_size);
 
 	hold_center_timer.setTimerType(Qt::PreciseTimer);
 	connect(&hold_center_timer, SIGNAL(timeout()), this, SLOT(AddText()));

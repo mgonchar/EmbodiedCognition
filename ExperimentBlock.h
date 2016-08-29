@@ -109,7 +109,7 @@ public:
 
 		int delta = angle2px(shift_angle, distance_to_display, wdt, true),
 			circle_size = circle_bounds_rect.width();
-		perifiric_circle_bounds_rect = QRect((hand_to_test&RIGHT) ? delta : width() / 2 - delta - circle_size, -circle_size / 2, circle_size, circle_size);
+		perifiric_circle_bounds_rect = QRect((hand_to_test&RIGHT) ? delta : -(delta + circle_size), -circle_size / 2, circle_size, circle_size);
 
 		QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
 		condition_change = codec->toUnicode("Серия окончена\nНовая серия будет рисовать круг ") + codec->toUnicode(GetHandKind() == LEFT ? "слева" : "справа");
