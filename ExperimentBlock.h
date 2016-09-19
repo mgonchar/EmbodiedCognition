@@ -22,6 +22,7 @@
 #include <cmath>
 const double pi = std::acos(-1);
 
+const double DEFAULT_POS = -5000.0;
 /*
 const double CIRCLE_ANGLE     = 3.2;
 const double TEXT_ANGLE       = 5.0;
@@ -106,7 +107,7 @@ public:
 
 		if (complicate)
 		{
-			switch (word_category >> 3)
+			switch ((word_category >> 3)<<3)
 			{
 			case Red:
 				tmp += " RED)";
@@ -150,6 +151,8 @@ public:
 	unsigned int GetBlockState() { return current_state; }
 	void SetBlockState(unsigned int state) { current_state = state; }
 
+	QString GetStateString();
+
 	QRect GetCircleBounds()          { return circle_bounds_rect; }
 	QRect GetPerifiricCircleBounds() { return perifiric_circle_bounds_rect; }
 
@@ -160,7 +163,7 @@ public:
 	void keyPressEvent(QKeyEvent *event);
 
 	void StopAllTimers();
-	void FailedTrial();
+	void FailedTrial(QPoint pos = QPoint(DEFAULT_POS, DEFAULT_POS));
 
 	QFile logging_file;
 	QTextStream logging_stream;

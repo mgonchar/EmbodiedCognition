@@ -129,13 +129,13 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 	if (current_state & ShowingText)
 	{
-		pen.setColor(colored ? (GetCategory() == Red ? Qt::red : Qt::green) : Qt::white);
+		pen.setColor(colored ? ((GetCategory() & Red) ? Qt::red : Qt::green) : Qt::white);
 		painter.setPen(pen);
 		painter.setFont(QFont("Arial", font_size));
 
 		logging_stream << ("Displaying text: " + text_to_show + " of category: " + GetCategoryString() +"\n");
 
-		if (GetCategory() != Common && GetCategory() != Red)
+		if (!(GetCategory() & Common) && !(GetCategory() & Red))
 			elapsed_timer.start();
 
 		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, text_to_show);
@@ -206,7 +206,7 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 			else
 			{
 				StopAllTimers();
-				FailedTrial();
+				FailedTrial(pos);
 			}
 			break;
 
@@ -222,13 +222,13 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 			else
 			{
 				StopAllTimers();
-				FailedTrial();
+				FailedTrial(pos);
 			}
 			break;
 
 		default:
 			StopAllTimers();
-			FailedTrial();
+			FailedTrial(pos);
 			break;
 	}
 
@@ -236,11 +236,13 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 
 void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 {
-	bool wrong_decision_common_word = ((GetCategory() == Common || GetCategory() == Red) && holding_center && wait_during_common_word.isActive());
+	bool wrong_decision_common_word = ((GetCategory() & Common) || (GetCategory() & Red)) && holding_center && wait_during_common_word.isActive();
 	if (wrong_decision_common_word || hold_perifiric_timer.isActive() || hold_center_timer.isActive())
 	{		
 		if (wrong_decision_common_word)
 			logging_stream << "Finger released while word of category" << (colored ? "RED" : "COMMON") << " is displayed!!\n";
+		else
+			logging_stream << "Release event occured!\n";
 
 		StopAllTimers();
 		FailedTrial();
@@ -265,14 +267,20 @@ void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
 
 	if (holding_center && !GetCircleBounds().contains(pos)) 
 	{
+		logging_stream << ("Pointer moved outside target circle\n");
+		logging_stream.flush();
+
 		StopAllTimers();
-		FailedTrial();
+		FailedTrial(pos);
 	}
 
 	if (holding_perifiric && !GetPerifiricCircleBounds().contains(pos))
 	{
+		logging_stream << ("\n");
+		logging_stream.flush();
+
 		StopAllTimers();
-		FailedTrial();
+		FailedTrial(pos);
 	}
 }
 
@@ -311,12 +319,36 @@ void ExperimentBlock::StopAllTimers()
 }
 
 
-void ExperimentBlock::FailedTrial()
+void ExperimentBlock::FailedTrial(QPoint point)
 {
 	playlist.setCurrentIndex(0);
 	player->play();
 
 	logging_stream << "Trial failed in reason of occasional or incorrect screen touching\n";
+
+	if (point.x() != DEFAULT_POS)
+	{
+		logging_stream << "Current state is: " << GetStateString();
+		logging_stream << "Touched at x: " << point.x() << " y: " << point.y();
+
+		switch (GetBlockState() & CircleOnScreen)
+		{
+			case ShowingCentralCircle:
+			{
+				QRect rect = GetCircleBounds();
+				logging_stream << " While bounds are x: " << rect.x() << " y: " << rect.y() << " w: " << rect.width() << " h: " << rect.height() << "\n";
+			}
+			break;
+
+			case ShowingPerifiricCircle:
+			{
+				QRect rect = GetPerifiricCircleBounds();
+				logging_stream << " While bounds are x: " << rect.x() << " y: " << rect.y() << " w: " << rect.width() << " h: " << rect.height() << "\n";
+			}
+			break;
+		}
+	}
+
 	logging_stream.flush();
 	GetNextWord(true);
 }
@@ -342,4 +374,39 @@ void ExperimentBlock::FinishTheBlock()
 
 	GetNextWord(false);
 	update(); 
+}
+
+QString ExperimentBlock::GetStateString()
+{
+	unsigned int state = GetBlockState();
+	QString ret = "";
+	
+	if (state & ShowingCentralCircle)
+	{
+		ret += "CentralCircle ";
+	}
+
+	if (state & ShowingPerifiricCircle)
+	{
+		ret += "PerifiricCircle ";
+	}
+
+	if (state & ShowingText)
+	{
+		ret += "ShowWord ";
+	}
+
+	if (state & DisplayTextMessage)
+	{
+		ret += "InterSerialMessage ";
+	}
+
+	if (state & FinishExperiment)
+	{
+		ret += "ExperimentFinished ";
+	}
+
+	ret += "\n";
+
+	return ret;
 }

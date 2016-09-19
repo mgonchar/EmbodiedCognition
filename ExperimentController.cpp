@@ -52,7 +52,8 @@ ExpirementController::ExpirementController(QApplication* a, QString id, bool col
 
 	qsrand(time(0));
 
-	if ((static_cast<double>(qrand())) / RAND_MAX > 0.5) {
+	if ((static_cast<double>(qrand())) / RAND_MAX > 0.5)
+	{
 		std::swap(hk_design[0], hk_design[1]);
 	}
 	experiment_block.SetHandKind(hk_design[0]);
@@ -71,7 +72,7 @@ void ChangeColor(QList<CategorialWord> & list)
 	for (auto it = list.begin(); it != list.end(); ++it)
 	{
 		tmp = (*it).category;
-		(*it).category = (tmp & Red) ? (tmp & 7 | Green) : (tmp & 7 | Red);
+		(*it).category = (tmp & Red) ? ((tmp & 7) | Green) : ((tmp & 7) | Red);
 	}
 }
 
@@ -87,7 +88,7 @@ void ExpirementController::FormExperimentSet()
 	{
 		tmp.clear();
 
-		if (is_colored && (i & 1))
+		if (is_colored /*&& (i & 1)*/)
 		{
 			ChangeColor(hand_words);
 			ChangeColor(leg_words);
@@ -137,8 +138,8 @@ void ExpirementController::NextTrial(bool failed)
 	if (failed)
 	{
 		// backup failed trial
-		int idx = ((static_cast<double>(qrand())) / RAND_MAX) * (formed_for_experiment.size() - show_idx - 1) + show_idx + 1;
-		formed_for_experiment.insert(idx, formed_for_experiment[show_idx]);
+		int idx = ((static_cast<double>(qrand())) / RAND_MAX) * (formed_for_experiment.size() - show_idx) + show_idx;
+		formed_for_experiment.insert(idx, formed_for_experiment[show_idx-1]);
 	}
 
 	if (show_idx != formed_for_experiment.size())
