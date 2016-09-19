@@ -135,7 +135,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 		logging_stream << ("Displaying text: " + text_to_show + " of category: " + GetCategoryString() +"\n");
 
-		if (!(GetCategory() & Common) && !(GetCategory() & Red))
+		if (!(GetCategory() == Common) && !(GetCategory() & Red))
 			elapsed_timer.start();
 
 		painter.drawText(text_bounds_rect, Qt::AlignBottom | Qt::AlignHCenter, text_to_show);
@@ -147,12 +147,11 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 		painter.setBrush(brush);
 
 		painter.drawEllipse(GetPerifiricCircleBounds());
-		
-		uint category = GetCategory();
-		if ((category & Common) || (category & Red))
+
+		if ((GetCategory() == Common) || (GetCategory() & Red))
 		{
 			uint timer_time = ((static_cast<double>(qrand()) / RAND_MAX) * 300 + 500); /* random 500-800 ms */
-			logging_stream << "Started timer to wait during" << GetCategoryString() << "word: " << QString("%1").arg(timer_time) << " ms\n";
+			logging_stream << "Started timer to wait during " << GetCategoryString() << " word: " << QString("%1").arg(timer_time) << " ms\n";
 			logging_stream.flush();
 			wait_during_common_word.start(timer_time);
 		}
@@ -236,7 +235,7 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 
 void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 {
-	bool wrong_decision_common_word = ((GetCategory() & Common) || (GetCategory() & Red)) && holding_center && wait_during_common_word.isActive();
+	bool wrong_decision_common_word = ((GetCategory() == Common) || (GetCategory() & Red)) && holding_center && wait_during_common_word.isActive();
 	if (wrong_decision_common_word || hold_perifiric_timer.isActive() || hold_center_timer.isActive())
 	{		
 		if (wrong_decision_common_word)
@@ -249,7 +248,7 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 	} 
 	else
 	{
-		if (holding_center)
+		if (holding_center && !((GetCategory() == Common) || (GetCategory() & Red)))
 		{
 			int n_milliseconds = elapsed_timer.elapsed();
 			logging_stream << ("Thinked before action: " + QString("%1").arg(n_milliseconds) + " ms\n");
