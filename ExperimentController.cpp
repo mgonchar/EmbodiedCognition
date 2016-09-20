@@ -1,7 +1,5 @@
 #include "ExperimentController.h"
 
-#include <time.h>
-
 ExpirementController::ExpirementController(QApplication* a, QString id, bool colored_series, double dist, bool is_hand, double circle_angle, double text_angle, double shift_angle)
 	: experiment_block(this, id, colored_series, dist, is_hand, circle_angle, text_angle, shift_angle)
 	, is_colored(colored_series)
@@ -50,16 +48,18 @@ ExpirementController::ExpirementController(QApplication* a, QString id, bool col
 
 	connect(&experiment_block, SIGNAL(CloseAll()), a, SLOT(quit()));
 
-	qsrand(time(0));
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::bernoulli_distribution d(0.5);
 
-	if ((static_cast<double>(qrand())) / RAND_MAX > 0.5)
+	if (d(gen))
 	{
 		std::swap(hk_design[0], hk_design[1]);
 	}
 	experiment_block.SetHandKind(hk_design[0]);
 
 	/*
-	if ((static_cast<double>(qrand())) / RAND_MAX > 0.5) {
+	if (dis(gen)) {
 		std::swap(mvngtm_design[0], mvngtm_design[1]);
 	}
 	experiment_block.SetInterval(mvngtm_design[0]);
@@ -88,7 +88,7 @@ void ExpirementController::FormExperimentSet()
 	{
 		tmp.clear();
 
-		if (is_colored /*&& (i & 1)*/)
+		if (is_colored)
 		{
 			ChangeColor(hand_words);
 			ChangeColor(leg_words);
@@ -108,7 +108,6 @@ void ExpirementController::FormExperimentSet()
 		formed_for_experiment += tmp;
 	}
 
-
 	/*
 	formed_for_experiment.clear();
 	QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
@@ -123,6 +122,7 @@ void ExpirementController::FormExperimentSet()
 	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("обещать"), Common));
 	formed_for_experiment.push_back(CategorialWord(codec->toUnicode("возмутить"), Common));
 	*/
+
 	show_idx = 0;
 }
 
@@ -138,8 +138,8 @@ void ExpirementController::NextTrial(bool failed)
 	if (failed)
 	{
 		// backup failed trial
-		int idx = ((static_cast<double>(qrand())) / RAND_MAX) * (formed_for_experiment.size() - show_idx) + show_idx;
-		formed_for_experiment.insert(idx, formed_for_experiment[show_idx-1]);
+		int idx = dis(gen) * (formed_for_experiment.size() - show_idx) + show_idx;
+		formed_for_experiment.insert(idx, formed_for_experiment[std::max(show_idx-1, 0)]);
 	}
 
 	if (show_idx != formed_for_experiment.size())

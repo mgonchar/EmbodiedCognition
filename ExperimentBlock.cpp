@@ -51,7 +51,7 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	logging_stream << "Series type: " << (is_hand? "TESTING_HANDS\n" : "TESTING_LEGS\n");
 	logging_stream << "Series type: " << (colored_series ? "colored\n\n" : "ordinal\n\n");
 
-	int wdt = QGuiApplication::primaryScreen()->geometry().width();
+	int wdt = QGuiApplication::primaryScreen()->geometry().width(), hgt = QGuiApplication::primaryScreen()->geometry().height();
 	int circle_size = angle2px(circle_angle, distance_to_display, wdt, true);
 	int delta = angle2px(shift_angle, distance_to_display, wdt, true);
 
@@ -62,7 +62,7 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	font_size *= tmp / px_w;
 
 	circle_bounds_rect = QRect(-circle_size/2, -circle_size/2, circle_size, circle_size);
-	text_bounds_rect = QRect(-width()/2, -height()/2, width(), height() / 2 - circle_size / 2);
+	text_bounds_rect = QRect(-wdt/2, -hgt/2, wdt, hgt / 2 - circle_size / 2);
 	perifiric_circle_bounds_rect = QRect( (hand_to_test&RIGHT) ? delta : -(delta + circle_size), -circle_size/2, circle_size, circle_size);
 
 	hold_center_timer.setTimerType(Qt::PreciseTimer);
@@ -150,7 +150,7 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 		if ((GetCategory() == Common) || (GetCategory() & Red))
 		{
-			uint timer_time = ((static_cast<double>(qrand()) / RAND_MAX) * 300 + 500); /* random 500-800 ms */
+			uint timer_time = (dis(gen) * 300 + 500); /* random 500-800 ms */
 			logging_stream << "Started timer to wait during " << GetCategoryString() << " word: " << QString("%1").arg(timer_time) << " ms\n";
 			logging_stream.flush();
 			wait_during_common_word.start(timer_time);
@@ -159,7 +159,6 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 	if (current_state & DisplayTextMessage)
 	{
-
 		painter.setPen(pen);
 		painter.setFont(QFont("Arial", 40));
 
@@ -197,7 +196,7 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 			if (!(current_state & ShowingText) && GetCircleBounds().contains(pos))
 			{
 				holding_center = true;
-				uint timer_time = ((static_cast<double>(qrand()) / RAND_MAX) * 300 + 400); /* random 400-700 ms */
+				uint timer_time = (dis(gen) * 300 + 400); /* random 400-700 ms */
 				logging_stream << "Started timer to wait while central circle is held: " << QString("%1").arg(timer_time) << " ms\n";
 				logging_stream.flush();
 				hold_center_timer.start(timer_time);
@@ -216,7 +215,7 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 				int n_milliseconds = elapsed_timer.elapsed();
 				logging_stream << ("Finger movement taken: " + QString("%1").arg(n_milliseconds) + " ms\n");
 				logging_stream.flush();
-				hold_perifiric_timer.start((static_cast<double>(qrand()) / RAND_MAX) * 100 + 300); /* random 300-400 ms */
+				hold_perifiric_timer.start(dis(gen) * 100 + 300); /* random 300-400 ms */
 			}
 			else
 			{
@@ -235,6 +234,14 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 
 void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 {
+	switch (GetBlockState())
+	{
+	case DisplayTextMessage:
+	case FinishExperiment:
+		return;
+		break;
+	}
+
 	bool wrong_decision_common_word = ((GetCategory() == Common) || (GetCategory() & Red)) && holding_center && wait_during_common_word.isActive();
 	if (wrong_decision_common_word || hold_perifiric_timer.isActive() || hold_center_timer.isActive())
 	{		
@@ -262,6 +269,14 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 
 void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
 {
+	switch (GetBlockState())
+	{
+	case DisplayTextMessage:
+	case FinishExperiment:
+		return;
+		break;
+	}
+
 	QPoint pos = event->pos() - QPoint(width() / 2, height() / 2);
 
 	if (holding_center && !GetCircleBounds().contains(pos)) 

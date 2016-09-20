@@ -20,6 +20,13 @@
 #include <QGuiApplication>
 
 #include <cmath>
+#include <random>
+#include <time.h>
+
+static std::random_device rd;
+static std::mt19937 gen(rd());
+static std::uniform_real_distribution<> dis(0, 1);
+
 const double pi = std::acos(-1);
 
 const double DEFAULT_POS = -5000.0;
