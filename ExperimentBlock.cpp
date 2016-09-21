@@ -205,6 +205,7 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 			{
 				StopAllTimers();
 				FailedTrial(pos);
+				return;
 			}
 			break;
 
@@ -221,12 +222,14 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 			{
 				StopAllTimers();
 				FailedTrial(pos);
+				return;
 			}
 			break;
 
 		default:
 			StopAllTimers();
 			FailedTrial(pos);
+			return;
 			break;
 	}
 
@@ -234,6 +237,11 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 
 void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 {
+	if (!holding_center && !holding_perifiric)
+	{
+		return;
+	}
+
 	switch (GetBlockState())
 	{
 	case DisplayTextMessage:
@@ -246,12 +254,13 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 	if (wrong_decision_common_word || hold_perifiric_timer.isActive() || hold_center_timer.isActive())
 	{		
 		if (wrong_decision_common_word)
-			logging_stream << "Finger released while word of category" << (colored ? "RED" : "COMMON") << " is displayed!!\n";
+			logging_stream << "Finger released while word of category " << (colored ? "RED" : "COMMON") << " is displayed!!\n";
 		else
 			logging_stream << "Release event occured!\n";
 
 		StopAllTimers();
 		FailedTrial();
+		return;
 	} 
 	else
 	{
@@ -269,6 +278,11 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 
 void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
 {
+	if (!holding_center && !holding_perifiric)
+	{
+		return;
+	}
+
 	switch (GetBlockState())
 	{
 	case DisplayTextMessage:
@@ -286,6 +300,7 @@ void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
 
 		StopAllTimers();
 		FailedTrial(pos);
+		return;
 	}
 
 	if (holding_perifiric && !GetPerifiricCircleBounds().contains(pos))
@@ -295,6 +310,7 @@ void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
 
 		StopAllTimers();
 		FailedTrial(pos);
+		return;
 	}
 }
 
@@ -335,6 +351,8 @@ void ExperimentBlock::StopAllTimers()
 
 void ExperimentBlock::FailedTrial(QPoint point)
 {
+	holding_center = holding_perifiric = false;
+
 	playlist.setCurrentIndex(0);
 	player->play();
 
