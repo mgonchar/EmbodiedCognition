@@ -156,7 +156,7 @@ public:
 	}
 
 	unsigned int GetBlockState() { return current_state; }
-	void SetBlockState(unsigned int state) { current_state = state; }
+	void SetBlockState(unsigned int state) { current_state = state; logging_stream << "Current state set to: " << GetStateString() << "\n"; }
 
 	QString GetStateString();
 
