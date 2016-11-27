@@ -178,6 +178,8 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 {
+	logging_stream << "EVENT: MOUSE PRESS\n";
+
 	QPoint pos = event->pos() - QPoint(width() / 2, height() / 2);
 
 	unsigned int current_state = GetBlockState();
@@ -237,6 +239,8 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 
 void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 {
+	logging_stream << "EVENT: MOUSE RELEASE\n";
+
 	if (!holding_center && !holding_perifiric)
 	{
 		return;
@@ -278,6 +282,8 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 
 void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
 {
+	logging_stream << "EVENT: MOUSE MOVE\n";
+
 	if (!holding_center && !holding_perifiric)
 	{
 		return;
@@ -316,6 +322,8 @@ void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
 
 void ExperimentBlock::keyPressEvent(QKeyEvent *event)
 {
+	logging_stream << "EVENT: KEY PRESS\n";
+
 	switch (event->key())
 	{
 	case Qt::Key::Key_Escape:
