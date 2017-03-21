@@ -88,9 +88,14 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 	playlist.addMedia(QUrl::fromLocalFile(QDir::currentPath() + "/sounds/bad_signal-1.wav"));
 	playlist.addMedia(QUrl::fromLocalFile(QDir::currentPath() + "/sounds/good_signal-4-1.wav"));
 	playlist.setPlaybackMode(QMediaPlaylist::CurrentItemOnce);
+	playlist.setCurrentIndex(1);
 	player->setPlaylist(&playlist);
-	player->setAudioRole(QAudio::AlarmRole);
+	player->setAudioRole(QAudio::NotificationRole/*AlarmRole*/);
 	player->setVolume(100);
+
+	setAttribute(Qt::WA_AcceptTouchEvents);
+
+	//installEventFilter(this);
 }
 
 ExperimentBlock::~ExperimentBlock() 
@@ -107,6 +112,10 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing);
 	painter.setRenderHint(QPainter::TextAntialiasing);
+
+	QStyleOption opt;
+	opt.init(this);
+	style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
 
 	QPen pen(Qt::white);
 	pen.setWidth(2);
@@ -176,12 +185,113 @@ void ExperimentBlock::paintEvent(QPaintEvent *)
 
 }
 
+/*
+bool ExperimentBlock::eventFilter(QObject *obj, QEvent *ev) {
+	auto tp = ev->type();
+
+	QList<QEvent::Type> ignore = { 
+		QEvent::Type::Move, 
+		QEvent::Type::Resize, 
+		QEvent::Type::Show, 
+		QEvent::Type::CursorChange, 
+		QEvent::Type::ShowToParent, 
+		QEvent::Type::PolishRequest, 
+		QEvent::Type::UpdateLater, 
+		QEvent::Type::UpdateRequest, 
+		QEvent::Type::WindowActivate, 
+		QEvent::Type::ActivationChange, 
+		QEvent::Type::InputMethodQuery,  
+		QEvent::Type::Paint, 
+		QEvent::Type::Enter, 
+		QEvent::Type::WindowDeactivate, 
+		QEvent::Type::Leave, 
+		QEvent::Type::WindowActivate,
+		QEvent::Type::ToolTip};
+
+	if (!ignore.contains(tp))
+	{
+		int ttt = 0;
+	}
+
+	return true;
+}*/
+
+/*
 void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 {
 	logging_stream << "EVENT: MOUSE PRESS\n";
 
 	QPoint pos = event->pos() - QPoint(width() / 2, height() / 2);
 
+	Press(pos);
+}
+
+void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
+{
+	logging_stream << "EVENT: MOUSE RELEASE\n";
+
+	Release();
+}
+
+void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
+{
+	logging_stream << "EVENT: MOUSE MOVE\n";
+
+	QPoint pos = event->pos() - QPoint(width() / 2, height() / 2);
+
+	Move(pos);
+}*/
+
+bool ExperimentBlock::event(QEvent *event)
+{
+	//auto tp = event->type();
+	switch (event->type())
+	{
+	case QEvent::MouseButtonPress:
+		//Press((dynamic_cast<QMouseEvent *>(event))->pos() - QPoint(width() / 2, height() / 2));
+		break;
+    case QEvent::TouchBegin:
+	{
+		Press(((dynamic_cast<QTouchEvent *>(event))->touchPoints())[0].pos().toPoint() - QPoint(width() / 2, height() / 2));
+	}
+		break;
+
+	case QEvent::MouseButtonRelease:
+		//Release();
+		break;
+	case QEvent::TouchEnd:
+		Release();
+		break;
+
+	case QEvent::MouseMove:
+		//Move((dynamic_cast<QMouseEvent *>(event))->pos() - QPoint(width() / 2, height() / 2));
+		break;
+	case QEvent::TouchUpdate:
+	{
+		Move(((dynamic_cast<QTouchEvent *>(event))->touchPoints())[0].pos().toPoint() - QPoint(width() / 2, height() / 2));
+	}
+		break;
+
+	case QEvent::KeyPress:
+		keyPressEvent(dynamic_cast<QKeyEvent *>(event));
+		break;
+
+	case QEvent::Paint:
+	case QEvent::UpdateRequest:
+	case QEvent::UpdateLater:
+		paintEvent(dynamic_cast<QPaintEvent*>(event));
+		return QWidget::event(event);
+		break;
+
+	default:
+		break;
+	}
+
+	return event->isAccepted();
+}
+
+void ExperimentBlock::Press(const QPoint & pos)
+{
 	unsigned int current_state = GetBlockState();
 
 	switch (current_state)
@@ -194,53 +304,53 @@ void ExperimentBlock::mousePressEvent(QMouseEvent *event)
 
 	switch (current_state & CircleOnScreen)
 	{
-		case ShowingCentralCircle:
-			if (!(current_state & ShowingText) && GetCircleBounds().contains(pos))
-			{
-				holding_center = true;
-				uint timer_time = (dis(gen) * 300 + 400); /* random 400-700 ms */
-				logging_stream << "Started timer to wait while central circle is held: " << QString("%1").arg(timer_time) << " ms\n";
-				logging_stream.flush();
-				hold_center_timer.start(timer_time);
-			}
-			else
-			{
-				StopAllTimers();
-				FailedTrial(pos);
-				return;
-			}
-			break;
-
-		case ShowingPerifiricCircle:
-			if (GetPerifiricCircleBounds().contains(pos))
-			{
-				holding_perifiric = true;
-				int n_milliseconds = elapsed_timer.elapsed();
-				logging_stream << ("Finger movement taken: " + QString("%1").arg(n_milliseconds) + " ms\n");
-				logging_stream.flush();
-				hold_perifiric_timer.start(dis(gen) * 100 + 300); /* random 300-400 ms */
-			}
-			else
-			{
-				StopAllTimers();
-				FailedTrial(pos);
-				return;
-			}
-			break;
-
-		default:
+	case ShowingCentralCircle:
+		if (!(current_state & ShowingText) && GetCircleBounds().contains(pos))
+		{
+			holding_center = true;
+			uint timer_time = (dis(gen) * 300 + 400); /* random 400-700 ms */
+			logging_stream << "Started timer to wait while central circle is held: " << QString("%1").arg(timer_time) << " ms\n";
+			logging_stream.flush();
+			hold_center_timer.start(timer_time);
+		}
+		else
+		{
 			StopAllTimers();
 			FailedTrial(pos);
 			return;
-			break;
-	}
+		}
+		break;
 
+	case ShowingPerifiricCircle:
+		if (GetPerifiricCircleBounds().contains(pos))
+		{
+			holding_perifiric = true;
+			int n_milliseconds = elapsed_timer.elapsed();
+			logging_stream << ("Finger movement taken: " + QString("%1").arg(n_milliseconds) + " ms\n");
+			logging_stream.flush();
+			uint timer_time = (dis(gen) * 100 + 300); /* random 300-400 ms */
+			logging_stream << "Started timer to wait while perifiric circle is held: " << QString("%1").arg(timer_time) << " ms\n";
+			logging_stream.flush();
+			hold_perifiric_timer.start(timer_time);
+		}
+		else
+		{
+			StopAllTimers();
+			FailedTrial(pos);
+			return;
+		}
+		break;
+
+	default:
+		StopAllTimers();
+		FailedTrial(pos);
+		return;
+		break;
+	}
 }
 
-void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
+void ExperimentBlock::Release()
 {
-	logging_stream << "EVENT: MOUSE RELEASE\n";
-
 	if (!holding_center && !holding_perifiric)
 	{
 		return;
@@ -256,7 +366,7 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 
 	bool wrong_decision_common_word = ((GetCategory() == Common) || (GetCategory() & Red)) && holding_center && wait_during_common_word.isActive();
 	if (wrong_decision_common_word || hold_perifiric_timer.isActive() || hold_center_timer.isActive())
-	{		
+	{
 		if (wrong_decision_common_word)
 			logging_stream << "Finger released while word of category " << (colored ? "RED" : "COMMON") << " is displayed!!\n";
 		else
@@ -265,7 +375,7 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 		StopAllTimers();
 		FailedTrial();
 		return;
-	} 
+	}
 	else
 	{
 		if (holding_center && !((GetCategory() == Common) || (GetCategory() & Red)))
@@ -280,10 +390,8 @@ void ExperimentBlock::mouseReleaseEvent(QMouseEvent *)
 	holding_center = holding_perifiric = false;
 }
 
-void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
+void ExperimentBlock::Move(const QPoint & pos)
 {
-	logging_stream << "EVENT: MOUSE MOVE\n";
-
 	if (!holding_center && !holding_perifiric)
 	{
 		return;
@@ -297,9 +405,7 @@ void ExperimentBlock::mouseMoveEvent(QMouseEvent *event)
 		break;
 	}
 
-	QPoint pos = event->pos() - QPoint(width() / 2, height() / 2);
-
-	if (holding_center && !GetCircleBounds().contains(pos)) 
+	if (holding_center && !GetCircleBounds().contains(pos))
 	{
 		logging_stream << ("Pointer moved outside target circle\n");
 		logging_stream.flush();
@@ -391,6 +497,7 @@ void ExperimentBlock::FailedTrial(QPoint point)
 
 	logging_stream.flush();
 	GetNextWord(true);
+	update();
 }
 
 
@@ -413,7 +520,8 @@ void ExperimentBlock::FinishTheBlock()
 	player->play();
 
 	GetNextWord(false);
-	update(); 
+	//QTimer::singleShot(2000, this, SLOT(update()));
+	update();
 }
 
 QString ExperimentBlock::GetStateString()

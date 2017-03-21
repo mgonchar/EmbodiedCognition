@@ -147,7 +147,6 @@ void ExpirementController::NextTrial(bool failed)
 		experiment_block.SetText(formed_for_experiment[show_idx].word, formed_for_experiment[show_idx].category);
 		show_idx++;
 		experiment_block.SetBlockState(ShowingCentralCircle);
-		experiment_block.update();
 	}
 	else 
 	{
@@ -176,6 +175,5 @@ void ExpirementController::NextTrial(bool failed)
 		}
 		FormExperimentSet();
 		experiment_block.SetBlockState(DisplayTextMessage);
-		experiment_block.update();
 	}
 }

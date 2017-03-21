@@ -1,4 +1,3 @@
-#include "mainwindow.h"
 //#include "ExperimentBlock.h"
 #include "ExperimentController.h"
 #include <QApplication>

@@ -18,6 +18,8 @@
 #include <QMediaContent>
 #include <QScreen>
 #include <QGuiApplication>
+#include <QStyle>
+#include <QStyleOption>
 
 #include <cmath>
 #include <random>
@@ -163,11 +165,18 @@ public:
 	QRect GetCircleBounds()          { return circle_bounds_rect; }
 	QRect GetPerifiricCircleBounds() { return perifiric_circle_bounds_rect; }
 
+	//bool eventFilter(QObject *obj, QEvent *ev);
 	void paintEvent(QPaintEvent *);
-	void mousePressEvent(QMouseEvent *event);
-	void mouseReleaseEvent(QMouseEvent *event);
-	void mouseMoveEvent(QMouseEvent * event);
+	//void mousePressEvent(QMouseEvent *event);
+	//void mouseReleaseEvent(QMouseEvent *event);
+	//void mouseMoveEvent(QMouseEvent * event);
 	void keyPressEvent(QKeyEvent *event);
+
+	bool event(QEvent *event);
+
+	void Press(const QPoint& pos);
+	void Release();
+	void Move(const QPoint& pos);
 
 	void StopAllTimers();
 	void FailedTrial(QPoint pos = QPoint(DEFAULT_POS, DEFAULT_POS));
