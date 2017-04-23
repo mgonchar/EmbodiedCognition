@@ -44,7 +44,28 @@ ExperimentBlock::ExperimentBlock(QWidget * parent,
 {
 	connect(this, SIGNAL(GetNextWord(bool)), controller, SLOT(NextTrial(bool)));
 
-	QDir().mkpath(logging_file.fileName().remove(subject_id + QString(colored_series ? "_colored_" : "_ordinal_") + (is_hand? "hand_" : "leg_") + QDate::currentDate().toString("dd.MM.yyyy") + ".log"));
+	// Not overwrite the log-file, if exists
+	int idx_to_append = 1;
+	while (logging_file.exists())
+	{
+		int idx = logging_file.fileName().lastIndexOf("___");
+
+		QString tmp_nm;
+		if (idx != -1)
+		{
+			tmp_nm = logging_file.fileName().replace(idx, logging_file.fileName().length() - idx, "___" + QString("%1").arg(idx_to_append) + ".log");
+		}
+		else
+		{
+			tmp_nm = logging_file.fileName().replace(logging_file.fileName().length() - 4, 4, "___" + QString("%1").arg(idx_to_append) + ".log");
+		}
+
+		logging_file.setFileName(tmp_nm);
+
+		++idx_to_append;
+	}
+
+	QDir().mkpath(QDir::currentPath() + "/subjects/");
 	logging_file.open(QIODevice::ReadWrite | QIODevice::Truncate);
 	logging_stream.setCodec("UTF-16");
 	logging_stream << ("Experiment started: " + QDate::currentDate().toString("dd.MM.yyyy") + "\nSubject id: "+ subject_id + "\n\n");
